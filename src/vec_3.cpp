@@ -28,7 +28,7 @@ void* my_alloc(R_allocator_t *allocator, size_t size)
 void my_free(R_allocator_t *allocator, void* addr) { }
 
 // [[Rcpp::export]]
-SEXP create_vec3(SEXP mem, double length, SEXPTYPE type) {
+SEXP create_vec3(SEXP mem, double length, SEXP type) {
 
   auto ator = (R_allocator_t*)malloc(sizeof(R_allocator_t));
   ator->mem_alloc = &my_alloc;
@@ -36,5 +36,5 @@ SEXP create_vec3(SEXP mem, double length, SEXPTYPE type) {
   ator->res = NULL;
   ator->data = mem;
 
-  return Rf_allocVector3(type, static_cast<R_xlen_t>(length), ator);
+  return Rf_allocVector3(TYPEOF(type), static_cast<R_xlen_t>(length), ator);
 }
