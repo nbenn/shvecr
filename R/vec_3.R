@@ -1,7 +1,7 @@
 
 #' @importFrom shmemr new_mem
 #' @export
-new_vec3 <- function(length, data_type = numeric(), ...) {
+new_vec3 <- function(length, data_type = double(), ...) {
 
   mem <- new_mem(0, ...)
 

@@ -22,7 +22,7 @@ void* my_alloc(R_allocator_t *allocator, size_t size)
 {
   auto mem = (SEXP)allocator->data;
   shmemr::mem_resize(mem, static_cast<double>(size));
-  return R_ExternalPtrAddr(shmemr::get_mem_address(mem));
+  return R_ExternalPtrAddr(shmemr::get_mem_ptr(mem));
 }
 
 void my_free(R_allocator_t *allocator, void* addr) { }
