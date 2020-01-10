@@ -11,8 +11,9 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 LinkingTo:
-    Rcpp,
-    shmemr
+    Rcpp (>= 0.12.18.3),
+    shmemr,
+    RcppArmadillo
 Imports:
     Rcpp
 RoxygenNote: 6.1.1

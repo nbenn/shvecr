@@ -5,26 +5,50 @@
 
 using namespace Rcpp;
 
+// doubles
+SEXP doubles();
+RcppExport SEXP _shvecr_doubles() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(doubles());
+    return rcpp_result_gen;
+END_RCPP
+}
+// doubles_example
+SEXP doubles_example();
+RcppExport SEXP _shvecr_doubles_example() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(doubles_example());
+    return rcpp_result_gen;
+END_RCPP
+}
 // create_vec3
-SEXP create_vec3(SEXP mem, double length, SEXPTYPE type);
+SEXP create_vec3(SEXP mem, double length, SEXP type);
 RcppExport SEXP _shvecr_create_vec3(SEXP memSEXP, SEXP lengthSEXP, SEXP typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type mem(memSEXP);
     Rcpp::traits::input_parameter< double >::type length(lengthSEXP);
-    Rcpp::traits::input_parameter< SEXPTYPE >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type type(typeSEXP);
     rcpp_result_gen = Rcpp::wrap(create_vec3(mem, length, type));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_shvecr_doubles", (DL_FUNC) &_shvecr_doubles, 0},
+    {"_shvecr_doubles_example", (DL_FUNC) &_shvecr_doubles_example, 0},
     {"_shvecr_create_vec3", (DL_FUNC) &_shvecr_create_vec3, 3},
     {NULL, NULL, 0}
 };
 
+void init_arma_vec(DllInfo* dll);
 RcppExport void R_init_shvecr(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
+    init_arma_vec(dll);
 }
