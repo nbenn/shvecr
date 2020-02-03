@@ -18,65 +18,61 @@
 
 #include "altrep.h"
 
-struct arma_vec
+struct alt_shreal
 {
   static R_altrep_class_t class_t;
 
-  static SEXP make(arma::dvec* data, bool owner)
+  static SEXP make(std::string name, double length, std::string type)
   {
-    SEXP xp = PROTECT(R_MakeExternalPtr(data, R_NilValue, R_NilValue));
+    Rcpp::List meta = shmemr::mem_init(name, length * sizeof(double), type);
 
-    if (owner) {
-      R_RegisterCFinalizerEx(xp, arma_vec::finalize, TRUE);
-    }
+    SEXP xp = PROTECT(shmemr::get_mem_ptr(meta));
 
-    SEXP res = R_new_altrep(class_t, xp, R_NilValue);
+    SEXP res = R_new_altrep(class_t, xp, meta);
 
     UNPROTECT(1);
     return res;
   }
 
-  static void finalize(SEXP xp)
+  static double* ptr(SEXP x)
   {
-    delete static_cast<arma::dvec*>(R_ExternalPtrAddr(xp));
-  }
+    auto res = R_ExternalPtrAddr(R_altrep_data1(x));
 
-  static arma::dvec* ptr(SEXP x)
-  {
-    return static_cast<arma::dvec*>(R_ExternalPtrAddr(R_altrep_data1(x)));
-  }
+    if (!res)
+    {
+      auto meta = shmemr::mem_reinit(R_altrep_data2(x));
+      res = shmemr::get_mem_ptr(meta);
+    }
 
-  static arma::dvec& get(SEXP vec)
-  {
-    return *ptr(vec) ;
+    return static_cast<double*>(res);
   }
 
   // ALTREP methods -------------------
 
-  static R_xlen_t Length(SEXP vec)
+  static R_xlen_t Length(SEXP x)
   {
-    return get(vec).n_elem;
+    auto lst = Rcpp::List(R_altrep_data2(x));
+    return static_cast<R_xlen_t>(lst["length"]);
   }
 
   static Rboolean Inspect(SEXP x, int pre, int deep, int pvec,
       void (*inspect_subtree)(SEXP, int, int, int))
   {
-    Rprintf("arma::dvec (len=%d, ptr=%p)\n", Length(x), ptr(x));
+    Rprintf("alt_shreal (len=%d, ptr=%p)\n", Length(x), ptr(x));
     return TRUE;
   }
 
   // ALTVEC methods ------------------
 
-  static const void* Dataptr_or_null(SEXP vec)
+  static const void* Dataptr_or_null(SEXP x)
   {
-    return get(vec).memptr();
+    return ptr(x);
   }
 
-  static void* Dataptr(SEXP vec, Rboolean writeable)
+  static void* Dataptr(SEXP x, Rboolean writeable)
   {
-    return get(vec).memptr();
+    return ptr(x);
   }
-
 
   // ALTREAL methods -----------------
 
@@ -84,22 +80,29 @@ struct arma_vec
   // the caller must take care of that
   static double real_Elt(SEXP vec, R_xlen_t i)
   {
-    return get(vec)[i];
+    return ptr(vec)[i];
   }
 
   static R_xlen_t Get_region(SEXP vec, R_xlen_t start, R_xlen_t size,
       double* out)
   {
-    out = get(vec).memptr() + start;
-    R_xlen_t len = get(vec).n_elem - start;
-    return len > size ? len : size;
+    double* dptr = ptr(vec);
+    R_xlen_t len = Length(vec) - start;
+    R_xlen_t ncopy = len > size ? len : size;
+
+    for (R_xlen_t k = 0; k < ncopy; k++)
+    {
+      out[k] = dptr[start + k];
+    }
+
+    return ncopy;
   }
 
   // -------- initialize the altrep class with the methods above
 
   static void Init(DllInfo* dll)
   {
-    class_t = R_make_altreal_class("arma_vec", "shvecr", dll);
+    class_t = R_make_altreal_class("alt_shreal", "shvecr", dll);
 
     // altrep
     R_set_altrep_Length_method(class_t, Length);
@@ -116,56 +119,12 @@ struct arma_vec
 
 };
 
-// static initialization of arma_vec::class_t
-R_altrep_class_t arma_vec::class_t;
+// static initialization of alt_shreal::class_t
+R_altrep_class_t alt_shreal::class_t;
 
 // Called the package is loaded (needs Rcpp 0.12.18.3)
 // [[Rcpp::init]]
-void init_arma_vec(DllInfo* dll)
+void init_alt_shreal(DllInfo* dll)
 {
-  arma_vec::Init(dll);
-}
-
-//' an altrep object that wraps a arma::dvec
-//'
-//' @export
-// [[Rcpp::export]]
-SEXP doubles()
-{
-  // create a new arma::dvec
-  //
-  // this uses `new` because we want the vector to survive
-  // it is deleted when the altrep object is garbage collected
-  auto v = new arma::dvec {-2.0, -1.0, 0.0, 1.0, 2.0};
-
-  // The altrep object owns the arma::dvec
-  return arma_vec::make(v, true);
-}
-
-// example C++ function that returns `n` random number between 0 and 1
-arma::dvec randoms(int n)
-{
-  return arma::randu<arma::dvec>(n);
-}
-
-// [[Rcpp::export]]
-SEXP doubles_example()
-{
-  // get a arma::dvec from somewhere
-  auto v = randoms(10);
-
-  // wrap it into an altrep object of class `arma_vec::class_t`
-  // the altrep object does not own the vector, because we only need
-  // it within this scope, it will be deleted just like any C++ object
-  // at the end of this C++ function
-  SEXP x = PROTECT(arma_vec::make(&v, false));
-
-  // call sum(x) in the base environment
-  SEXP s_sum = Rf_install("sum");
-  SEXP call = PROTECT(Rf_lang2(s_sum, x));
-  SEXP res = Rf_eval(call, R_BaseEnv);
-
-  UNPROTECT(2);
-
-  return res;
+  alt_shreal::Init(dll);
 }
