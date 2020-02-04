@@ -6,6 +6,19 @@
 
 using namespace Rcpp;
 
+// new_altreal
+SEXP new_altreal(std::string name, double length, std::string type);
+RcppExport SEXP _shvecr_new_altreal(SEXP nameSEXP, SEXP lengthSEXP, SEXP typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type name(nameSEXP);
+    Rcpp::traits::input_parameter< double >::type length(lengthSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(new_altreal(name, length, type));
+    return rcpp_result_gen;
+END_RCPP
+}
 // create_vec3
 SEXP create_vec3(SEXP mem, double length, SEXP type);
 RcppExport SEXP _shvecr_create_vec3(SEXP memSEXP, SEXP lengthSEXP, SEXP typeSEXP) {
@@ -21,6 +34,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_shvecr_new_altreal", (DL_FUNC) &_shvecr_new_altreal, 3},
     {"_shvecr_create_vec3", (DL_FUNC) &_shvecr_create_vec3, 3},
     {NULL, NULL, 0}
 };

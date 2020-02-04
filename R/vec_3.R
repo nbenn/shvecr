@@ -10,3 +10,17 @@ new_vec3 <- function(length, data_type = double(), ...) {
 
   structure(res, class = "vec3")
 }
+
+#' @export
+new_altvec <- function(length, data_type = double(),
+                       name = shmemr::rand_name(),
+                       type = shmemr::list_mem_types()) {
+
+  assert_that(identical(typeof(data_type), "double"))
+
+  type <- match.arg(type)
+
+  res <- new_altreal(name, length, type)
+
+  structure(res, class = "altvec")
+}

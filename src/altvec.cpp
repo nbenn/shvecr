@@ -52,7 +52,7 @@ struct alt_shreal
   static R_xlen_t Length(SEXP x)
   {
     auto lst = Rcpp::List(R_altrep_data2(x));
-    return static_cast<R_xlen_t>(lst["length"]);
+    return static_cast<R_xlen_t>(lst["length"] / sizeof(double));
   }
 
   static Rboolean Inspect(SEXP x, int pre, int deep, int pvec,
@@ -127,4 +127,10 @@ R_altrep_class_t alt_shreal::class_t;
 void init_alt_shreal(DllInfo* dll)
 {
   alt_shreal::Init(dll);
+}
+
+// [[Rcpp::export]]
+SEXP new_altreal(std::string name, double length, std::string type)
+{
+  return alt_shreal::make(name, length, type);
 }
